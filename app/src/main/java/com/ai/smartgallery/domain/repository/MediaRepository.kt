@@ -114,4 +114,15 @@ interface MediaRepository {
      * Get deleted photo count
      */
     suspend fun getDeletedPhotoCount(): Int
+
+    /**
+     * Get AI-generated albums based on image labels
+     * Returns list of label names with photo counts (minimum 3 photos per label)
+     */
+    fun getAIGeneratedAlbums(): Flow<List<Pair<String, Int>>>
+
+    /**
+     * Get photos for a specific AI label
+     */
+    suspend fun getPhotosForLabel(label: String): List<Photo>
 }

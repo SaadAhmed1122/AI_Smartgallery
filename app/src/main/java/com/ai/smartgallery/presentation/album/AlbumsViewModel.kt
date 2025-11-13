@@ -52,6 +52,14 @@ class AlbumsViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
+    val aiGeneratedAlbums: StateFlow<List<Pair<String, Int>>> = mediaRepository
+        .getAIGeneratedAlbums()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 

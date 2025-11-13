@@ -5,6 +5,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.ai.smartgallery.data.local.MediaStoreManager
+import com.ai.smartgallery.data.local.dao.ImageLabelDao
 import com.ai.smartgallery.data.local.dao.PhotoDao
 import com.ai.smartgallery.data.model.toDomain
 import com.ai.smartgallery.di.IoDispatcher
@@ -23,6 +24,7 @@ import javax.inject.Singleton
 @Singleton
 class MediaRepositoryImpl @Inject constructor(
     private val photoDao: PhotoDao,
+    private val imageLabelDao: ImageLabelDao,
     private val mediaStoreManager: MediaStoreManager,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : MediaRepository {
@@ -141,5 +143,28 @@ class MediaRepositoryImpl @Inject constructor(
 
     override suspend fun getDeletedPhotoCount(): Int = withContext(ioDispatcher) {
         photoDao.getDeletedPhotoCount()
+    }
+
+    override fun getAIGeneratedAlbums(): Flow<List<Pair<String, Int>>> {
+        return imageLabelDao.getAllDistinctLabels().map { labels ->
+            withContext(ioDispatcher) {
+                labels.mapNotNull { label ->
+                    val count = imageLabelDao.getPhotoCountForLabel(label)
+                    // Only include labels with at least 3 photos
+                    if (count >= 3) {
+                        label to count
+                    } else null
+                }.sortedByDescending { it.second } // Sort by photo count descending
+                .take(20) // Limit to top 20 AI albums
+            }
+        }
+    }
+
+    override suspend fun getPhotosForLabel(label: String): List<Photo> = withContext(ioDispatcher) {
+        val labelEntities = imageLabelDao.getPhotosWithLabel(label)
+        val photoIds = labelEntities.map { it.photoId }.distinct()
+        photoIds.mapNotNull { photoId ->
+            photoDao.getPhotoById(photoId)?.toDomain()
+        }
     }
 }

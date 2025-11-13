@@ -35,6 +35,7 @@ fun AlbumsScreen(
     val favoritePhotos by viewModel.favoritePhotos.collectAsState()
     val allPhotos by viewModel.allPhotos.collectAsState()
     val videos by viewModel.videos.collectAsState()
+    val aiAlbums by viewModel.aiGeneratedAlbums.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     val showCreateDialog by viewModel.showCreateDialog.collectAsState()
@@ -103,6 +104,27 @@ fun AlbumsScreen(
                         coverPhotos = favoritePhotos.take(4).map { it.path },
                         onClick = onNavigateToGallery
                     )
+                }
+
+                // AI-Generated Albums Section Header
+                if (aiAlbums.isNotEmpty()) {
+                    item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
+                        Text(
+                            text = "AI Albums",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(vertical = 8.dp, top = 16.dp)
+                        )
+                    }
+
+                    // AI-generated album cards
+                    items(aiAlbums) { (label, count) ->
+                        AIAlbumCard(
+                            label = label,
+                            count = count,
+                            onClick = { /* TODO: Navigate to AI album */ }
+                        )
+                    }
                 }
 
                 // User Albums Section Header
@@ -329,6 +351,75 @@ private fun AlbumCard(
                     )
                     Text(
                         text = "${album.photoCount} photos",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AIAlbumCard(
+    label: String,
+    count: Int,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .clickable(onClick = onClick),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Gradient background
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                // Icon representing the AI album type
+                Icon(
+                    imageVector = when {
+                        label.contains("dog", ignoreCase = true) -> Icons.Default.Pets
+                        label.contains("food", ignoreCase = true) -> Icons.Default.Restaurant
+                        label.contains("car", ignoreCase = true) -> Icons.Default.DirectionsCar
+                        label.contains("person", ignoreCase = true) ||
+                        label.contains("people", ignoreCase = true) -> Icons.Default.Person
+                        label.contains("nature", ignoreCase = true) ||
+                        label.contains("tree", ignoreCase = true) ||
+                        label.contains("flower", ignoreCase = true) -> Icons.Default.LocalFlorist
+                        label.contains("building", ignoreCase = true) ||
+                        label.contains("architecture", ignoreCase = true) -> Icons.Default.LocationCity
+                        label.contains("sunset", ignoreCase = true) ||
+                        label.contains("sky", ignoreCase = true) -> Icons.Default.WbSunny
+                        else -> Icons.Default.Label
+                    },
+                    contentDescription = label,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                )
+            }
+
+            // Album info overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.BottomStart
+            ) {
+                Column {
+                    Text(
+                        text = label.replaceFirstChar { it.uppercase() },
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = "$count photos",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
