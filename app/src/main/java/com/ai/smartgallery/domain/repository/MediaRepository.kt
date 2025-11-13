@@ -65,6 +65,11 @@ interface MediaRepository {
     suspend fun syncPhotosFromMediaStore()
 
     /**
+     * Schedule AI processing for photos
+     */
+    fun scheduleAIProcessing()
+
+    /**
      * Get photo count
      */
     suspend fun getPhotoCount(): Int

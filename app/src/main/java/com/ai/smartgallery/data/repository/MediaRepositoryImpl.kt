@@ -4,6 +4,10 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.ai.smartgallery.data.local.MediaStoreManager
 import com.ai.smartgallery.data.local.dao.ImageLabelDao
 import com.ai.smartgallery.data.local.dao.PhotoDao
@@ -11,6 +15,7 @@ import com.ai.smartgallery.data.model.toDomain
 import com.ai.smartgallery.di.IoDispatcher
 import com.ai.smartgallery.domain.model.Photo
 import com.ai.smartgallery.domain.repository.MediaRepository
+import com.ai.smartgallery.workers.AIProcessingWorker
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -26,6 +31,7 @@ class MediaRepositoryImpl @Inject constructor(
     private val photoDao: PhotoDao,
     private val imageLabelDao: ImageLabelDao,
     private val mediaStoreManager: MediaStoreManager,
+    private val workManager: WorkManager,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : MediaRepository {
 
@@ -100,6 +106,25 @@ class MediaRepositoryImpl @Inject constructor(
         // Load videos from MediaStore
         val videos = mediaStoreManager.loadAllVideos()
         photoDao.insertPhotos(videos)
+
+        // Schedule AI processing after photos are synced
+        scheduleAIProcessing()
+    }
+
+    override fun scheduleAIProcessing() {
+        val workRequest = OneTimeWorkRequestBuilder<AIProcessingWorker>()
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiresBatteryNotLow(true)
+                    .build()
+            )
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "ai_processing",
+            ExistingWorkPolicy.REPLACE,
+            workRequest
+        )
     }
 
     override suspend fun getPhotoCount(): Int = withContext(ioDispatcher) {
