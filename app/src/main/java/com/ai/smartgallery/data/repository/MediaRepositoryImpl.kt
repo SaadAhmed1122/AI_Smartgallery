@@ -90,7 +90,7 @@ class MediaRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun syncPhotosFromMediaStore() = withContext(ioDispatcher) {
+    override suspend fun syncPhotosFromMediaStore(): Unit = withContext(ioDispatcher) {
         // Load images from MediaStore
         val images = mediaStoreManager.loadAllImages()
         photoDao.insertPhotos(images)

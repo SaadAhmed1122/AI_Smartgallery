@@ -79,7 +79,7 @@ class PhotoEditorViewModel @Inject constructor(
                 if (photo != null) {
                     val bitmap = BitmapFactory.decodeFile(photo.path)
                     _originalBitmap.value = bitmap
-                    _editedBitmap.value = bitmap.copy(bitmap.config, true)
+                    _editedBitmap.value = bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, true)
                 }
             } catch (e: Exception) {
                 _error.value = "Failed to load photo"
@@ -100,7 +100,7 @@ class PhotoEditorViewModel @Inject constructor(
 
                 val original = _originalBitmap.value ?: return@launch
                 val result = when (filter) {
-                    PhotoFilter.NONE -> original.copy(original.config, true)
+                    PhotoFilter.NONE -> original.copy(original.config ?: Bitmap.Config.ARGB_8888, true)
                     PhotoFilter.GRAYSCALE -> imageProcessor.applyGrayscale(original)
                     PhotoFilter.SEPIA -> imageProcessor.applySepia(original)
                     PhotoFilter.VINTAGE -> imageProcessor.applyVintage(original)
@@ -160,7 +160,7 @@ class PhotoEditorViewModel @Inject constructor(
     private suspend fun applyAdjustments() {
         val original = _originalBitmap.value ?: return
 
-        var result = original.copy(original.config, true)
+        var result = original.copy(original.config ?: Bitmap.Config.ARGB_8888, true)
 
         if (_brightness.value != 0f) {
             result = imageProcessor.adjustBrightness(result, _brightness.value)
@@ -327,7 +327,7 @@ class PhotoEditorViewModel @Inject constructor(
     fun reset() {
         viewModelScope.launch {
             val original = _originalBitmap.value ?: return@launch
-            _editedBitmap.value = original.copy(original.config, true)
+            _editedBitmap.value = original.copy(original.config ?: Bitmap.Config.ARGB_8888, true)
             _selectedFilter.value = PhotoFilter.NONE
             _brightness.value = 0f
             _contrast.value = 1f

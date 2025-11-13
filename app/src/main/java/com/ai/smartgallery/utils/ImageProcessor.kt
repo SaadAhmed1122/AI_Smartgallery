@@ -123,7 +123,7 @@ class ImageProcessor @Inject constructor(
         value: Float
     ): Bitmap = withContext(Dispatchers.Default) {
         try {
-            val result = bitmap.copy(bitmap.config, true)
+            val result = bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, true)
             val canvas = Canvas(result)
             val paint = Paint().apply {
                 colorFilter = ColorMatrixColorFilter(ColorMatrix().apply {
@@ -151,7 +151,7 @@ class ImageProcessor @Inject constructor(
         contrast: Float
     ): Bitmap = withContext(Dispatchers.Default) {
         try {
-            val result = bitmap.copy(bitmap.config, true)
+            val result = bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, true)
             val canvas = Canvas(result)
             val translate = (-.5f * contrast + .5f) * 255f
             val paint = Paint().apply {
@@ -180,7 +180,7 @@ class ImageProcessor @Inject constructor(
         saturation: Float
     ): Bitmap = withContext(Dispatchers.Default) {
         try {
-            val result = bitmap.copy(bitmap.config, true)
+            val result = bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, true)
             val canvas = Canvas(result)
             val paint = Paint().apply {
                 colorFilter = ColorMatrixColorFilter(ColorMatrix().apply {
@@ -207,7 +207,7 @@ class ImageProcessor @Inject constructor(
      */
     suspend fun applySepia(bitmap: Bitmap): Bitmap = withContext(Dispatchers.Default) {
         try {
-            val result = bitmap.copy(bitmap.config, true)
+            val result = bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, true)
             val canvas = Canvas(result)
             val paint = Paint().apply {
                 colorFilter = ColorMatrixColorFilter(ColorMatrix().apply {
