@@ -2,8 +2,10 @@ package com.ai.smartgallery.data.model
 
 import com.ai.smartgallery.data.local.entity.AlbumEntity
 import com.ai.smartgallery.data.local.entity.PhotoEntity
+import com.ai.smartgallery.data.local.entity.TagEntity
 import com.ai.smartgallery.domain.model.Album
 import com.ai.smartgallery.domain.model.Photo
+import com.ai.smartgallery.domain.model.Tag
 
 /**
  * Extension function to convert PhotoEntity to domain Photo
@@ -87,6 +89,30 @@ fun Album.toEntity(coverPhotoId: Long? = null): AlbumEntity {
         coverPhotoId = coverPhotoId,
         photoCount = photoCount,
         isSmartAlbum = isSmartAlbum,
+        createdAt = createdAt
+    )
+}
+
+/**
+ * Extension function to convert TagEntity to domain Tag
+ */
+fun TagEntity.toDomain(): Tag {
+    return Tag(
+        id = id,
+        name = name,
+        color = color,
+        createdAt = createdAt
+    )
+}
+
+/**
+ * Extension function to convert domain Tag to TagEntity
+ */
+fun Tag.toEntity(): TagEntity {
+    return TagEntity(
+        id = id,
+        name = name,
+        color = color,
         createdAt = createdAt
     )
 }
