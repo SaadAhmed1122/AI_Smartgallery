@@ -12,6 +12,7 @@ import com.ai.smartgallery.presentation.photo.PhotoDetailScreen
 import com.ai.smartgallery.presentation.album.AlbumsScreen
 import com.ai.smartgallery.presentation.search.SearchScreen
 import com.ai.smartgallery.presentation.settings.SettingsScreen
+import com.ai.smartgallery.presentation.editor.PhotoEditorScreen
 
 /**
  * Main navigation graph for the app
@@ -52,7 +53,8 @@ fun NavGraph(
             val photoId = backStackEntry.arguments?.getLong("photoId") ?: 0L
             PhotoDetailScreen(
                 photoId = photoId,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onEdit = { navController.navigate(Screen.PhotoEditor.createRoute(photoId)) }
             )
         }
 
@@ -91,6 +93,21 @@ fun NavGraph(
         // People screen
         composable(Screen.People.route) {
             // PeopleScreen will be implemented
+        }
+
+        // Photo editor screen
+        composable(
+            route = Screen.PhotoEditor.route,
+            arguments = listOf(
+                navArgument("photoId") { type = NavType.LongType }
+            )
+        ) { backStackEntry ->
+            val photoId = backStackEntry.arguments?.getLong("photoId") ?: 0L
+            PhotoEditorScreen(
+                photoId = photoId,
+                onSave = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }
