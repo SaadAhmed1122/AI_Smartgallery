@@ -61,20 +61,6 @@ class AlbumsViewModel @Inject constructor(
     private val _showCreateDialog = MutableStateFlow(false)
     val showCreateDialog: StateFlow<Boolean> = _showCreateDialog.asStateFlow()
 
-    init {
-        loadSmartAlbums()
-    }
-
-    private fun loadSmartAlbums() {
-        viewModelScope.launch {
-            try {
-                albumRepository.createSmartAlbums()
-            } catch (e: Exception) {
-                // Smart albums may already exist
-            }
-        }
-    }
-
     fun createAlbum(name: String) {
         if (name.isBlank()) {
             _error.value = "Album name cannot be empty"

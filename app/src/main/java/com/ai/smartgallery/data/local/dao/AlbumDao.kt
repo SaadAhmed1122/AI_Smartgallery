@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface AlbumDao {
 
-    @Query("SELECT * FROM albums ORDER BY created_at DESC")
+    @Query("SELECT * FROM albums WHERE is_smart_album = 0 ORDER BY created_at DESC")
     fun getAllAlbums(): Flow<List<AlbumEntity>>
 
     @Query("SELECT * FROM albums WHERE id = :albumId")

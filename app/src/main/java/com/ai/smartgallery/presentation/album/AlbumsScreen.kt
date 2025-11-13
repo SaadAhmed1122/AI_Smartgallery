@@ -28,6 +28,7 @@ import com.ai.smartgallery.domain.model.Album
 fun AlbumsScreen(
     onAlbumClick: (Long) -> Unit,
     onBack: () -> Unit,
+    onNavigateToGallery: () -> Unit = {},
     viewModel: AlbumsViewModel = hiltViewModel()
 ) {
     val albums by viewModel.albums.collectAsState()
@@ -78,7 +79,7 @@ fun AlbumsScreen(
                         count = allPhotos.size,
                         icon = Icons.Default.PhotoLibrary,
                         coverPhotos = allPhotos.take(4).map { it.path },
-                        onClick = { /* Navigate to all photos */ }
+                        onClick = onNavigateToGallery
                     )
                 }
 
@@ -89,7 +90,7 @@ fun AlbumsScreen(
                         count = videos.size,
                         icon = Icons.Default.VideoLibrary,
                         coverPhotos = videos.take(4).map { it.path },
-                        onClick = { /* Navigate to videos */ }
+                        onClick = onNavigateToGallery
                     )
                 }
 
@@ -100,7 +101,7 @@ fun AlbumsScreen(
                         count = favoritePhotos.size,
                         icon = Icons.Default.Favorite,
                         coverPhotos = favoritePhotos.take(4).map { it.path },
-                        onClick = { /* Navigate to favorites */ }
+                        onClick = onNavigateToGallery
                     )
                 }
 

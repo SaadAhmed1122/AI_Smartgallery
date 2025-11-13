@@ -66,7 +66,12 @@ fun NavGraph(
                 onAlbumClick = { albumId ->
                     navController.navigate(Screen.AlbumDetail.createRoute(albumId))
                 },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onNavigateToGallery = {
+                    navController.navigate(Screen.Gallery.route) {
+                        popUpTo(Screen.Gallery.route) { inclusive = true }
+                    }
+                }
             )
         }
 
