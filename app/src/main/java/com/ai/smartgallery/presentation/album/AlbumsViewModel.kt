@@ -36,6 +36,14 @@ class AlbumsViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
+    val allPhotos: StateFlow<List<Photo>> = mediaRepository
+        .getAllPhotos()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
     val videos: StateFlow<List<Photo>> = mediaRepository
         .getVideos()
         .stateIn(

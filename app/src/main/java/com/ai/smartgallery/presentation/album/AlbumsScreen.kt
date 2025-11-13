@@ -32,6 +32,7 @@ fun AlbumsScreen(
 ) {
     val albums by viewModel.albums.collectAsState()
     val favoritePhotos by viewModel.favoritePhotos.collectAsState()
+    val allPhotos by viewModel.allPhotos.collectAsState()
     val videos by viewModel.videos.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
@@ -41,11 +42,6 @@ fun AlbumsScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Albums") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
                 actions = {
                     IconButton(onClick = { viewModel.showCreateDialog() }) {
                         Icon(Icons.Default.Add, contentDescription = "Create album")
@@ -65,23 +61,24 @@ fun AlbumsScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Smart Albums Section
-                item {
+                // Smart Albums Section Header
+                item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
                     Text(
                         text = "Smart Albums",
                         style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
 
-                // Favorites
+                // All Photos
                 item {
                     SmartAlbumCard(
-                        title = "Favorites",
-                        count = favoritePhotos.size,
-                        icon = Icons.Default.Favorite,
-                        coverPhoto = favoritePhotos.firstOrNull()?.path,
-                        onClick = { /* Navigate to favorites */ }
+                        title = "All Photos",
+                        count = allPhotos.size,
+                        icon = Icons.Default.PhotoLibrary,
+                        coverPhotos = allPhotos.take(4).map { it.path },
+                        onClick = { /* Navigate to all photos */ }
                     )
                 }
 
@@ -91,18 +88,30 @@ fun AlbumsScreen(
                         title = "Videos",
                         count = videos.size,
                         icon = Icons.Default.VideoLibrary,
-                        coverPhoto = videos.firstOrNull()?.path,
+                        coverPhotos = videos.take(4).map { it.path },
                         onClick = { /* Navigate to videos */ }
                     )
                 }
 
-                // User Albums Section
+                // Favorites
+                item {
+                    SmartAlbumCard(
+                        title = "Favorites",
+                        count = favoritePhotos.size,
+                        icon = Icons.Default.Favorite,
+                        coverPhotos = favoritePhotos.take(4).map { it.path },
+                        onClick = { /* Navigate to favorites */ }
+                    )
+                }
+
+                // User Albums Section Header
                 if (albums.isNotEmpty()) {
-                    item {
+                    item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
                         Text(
                             text = "My Albums",
                             style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(vertical = 8.dp)
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(vertical = 8.dp, top = 16.dp)
                         )
                     }
 
@@ -154,7 +163,7 @@ private fun SmartAlbumCard(
     title: String,
     count: Int,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    coverPhoto: String?,
+    coverPhotos: List<String>,
     onClick: () -> Unit
 ) {
     Card(
@@ -165,13 +174,58 @@ private fun SmartAlbumCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            if (coverPhoto != null) {
-                AsyncImage(
-                    model = coverPhoto,
-                    contentDescription = title,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
+            if (coverPhotos.isNotEmpty()) {
+                // Display up to 4 images in a 2x2 grid
+                Row(modifier = Modifier.fillMaxSize()) {
+                    // Left column
+                    Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                        // Top-left image
+                        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                            AsyncImage(
+                                model = coverPhotos.getOrNull(0),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        // Bottom-left image
+                        if (coverPhotos.size > 2) {
+                            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                                AsyncImage(
+                                    model = coverPhotos.getOrNull(2),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
+                    }
+                    // Right column
+                    if (coverPhotos.size > 1) {
+                        Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                            // Top-right image
+                            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                                AsyncImage(
+                                    model = coverPhotos.getOrNull(1),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                            // Bottom-right image
+                            if (coverPhotos.size > 3) {
+                                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                                    AsyncImage(
+                                        model = coverPhotos.getOrNull(3),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             } else {
                 // Empty state with icon
                 Box(
@@ -189,7 +243,7 @@ private fun SmartAlbumCard(
                 }
             }
 
-            // Gradient overlay
+            // Gradient overlay with album info
             Box(
                 modifier = Modifier
                     .fillMaxSize()
