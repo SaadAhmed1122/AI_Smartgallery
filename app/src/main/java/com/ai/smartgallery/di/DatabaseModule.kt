@@ -25,7 +25,10 @@ object DatabaseModule {
             GalleryDatabase::class.java,
             "smart_gallery_database"
         )
-            .addMigrations(GalleryDatabase.MIGRATION_1_2)
+            .addMigrations(
+                GalleryDatabase.MIGRATION_1_2,
+                GalleryDatabase.MIGRATION_2_3
+            )
             .fallbackToDestructiveMigration() // For development only
             .build()
     }

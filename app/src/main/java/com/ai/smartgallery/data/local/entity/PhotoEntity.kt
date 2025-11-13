@@ -11,10 +11,22 @@ import androidx.room.PrimaryKey
 @Entity(
     tableName = "photos",
     indices = [
+        // Primary indices for common queries
         Index(value = ["date_taken"], orders = [Index.Order.DESC]),
         Index(value = ["path"]),
         Index(value = ["perceptual_hash"]),
-        Index(value = ["media_store_id"], unique = true)
+        Index(value = ["media_store_id"], unique = true),
+
+        // Performance indices for filtering
+        Index(value = ["is_deleted"]),
+        Index(value = ["is_hidden"]),
+        Index(value = ["is_favorite"]),
+
+        // Composite index for most common query pattern (non-deleted, non-hidden, sorted by date)
+        Index(value = ["is_deleted", "is_hidden", "date_taken"], orders = [Index.Order.ASC, Index.Order.ASC, Index.Order.DESC]),
+
+        // Index for trash queries
+        Index(value = ["is_deleted", "deleted_at"], orders = [Index.Order.ASC, Index.Order.DESC])
     ]
 )
 data class PhotoEntity(

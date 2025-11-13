@@ -21,7 +21,7 @@ import com.ai.smartgallery.data.local.entity.*
         FaceEmbeddingEntity::class,
         ImageLabelEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class GalleryDatabase : RoomDatabase() {
@@ -43,6 +43,25 @@ abstract class GalleryDatabase : RoomDatabase() {
                 // Add is_deleted and deleted_at columns to photos table
                 database.execSQL("ALTER TABLE photos ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0")
                 database.execSQL("ALTER TABLE photos ADD COLUMN deleted_at INTEGER")
+            }
+        }
+
+        /**
+         * Migration from version 2 to 3
+         * Adds performance indices for common query patterns
+         */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add indices for better query performance
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_photos_is_deleted ON photos(is_deleted)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_photos_is_hidden ON photos(is_hidden)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_photos_is_favorite ON photos(is_favorite)")
+
+                // Composite index for most common query pattern
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_photos_is_deleted_is_hidden_date_taken ON photos(is_deleted ASC, is_hidden ASC, date_taken DESC)")
+
+                // Index for trash queries
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_photos_is_deleted_deleted_at ON photos(is_deleted ASC, deleted_at DESC)")
             }
         }
     }
