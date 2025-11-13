@@ -18,8 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.navigation.compose.rememberNavController
-import com.ai.smartgallery.presentation.navigation.NavGraph
+import com.ai.smartgallery.presentation.main.MainScreen
 import com.ai.smartgallery.ui.theme.SmartGalleryTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -42,7 +41,6 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun SmartGalleryApp() {
-        val navController = rememberNavController()
         var hasMediaPermission by remember {
             mutableStateOf(checkMediaPermissions())
         }
@@ -64,7 +62,7 @@ class MainActivity : ComponentActivity() {
             color = MaterialTheme.colorScheme.background
         ) {
             if (hasMediaPermission) {
-                NavGraph(navController = navController)
+                MainScreen()
             } else {
                 PermissionDeniedScreen(
                     onRequestPermission = {

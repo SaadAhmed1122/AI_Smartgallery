@@ -35,6 +35,7 @@ fun GalleryScreen(
     val selectedPhotos by viewModel.selectedPhotos.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+    var showMenu by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -52,8 +53,45 @@ fun GalleryScreen(
                         IconButton(onClick = onNavigateToSearch) {
                             Icon(Icons.Default.Search, contentDescription = "Search")
                         }
-                        IconButton(onClick = { /* Show menu */ }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "More")
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "More")
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Settings") },
+                                    onClick = {
+                                        showMenu = false
+                                        // TODO: Navigate to settings
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Settings, contentDescription = null)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Trash") },
+                                    onClick = {
+                                        showMenu = false
+                                        // TODO: Navigate to trash
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Delete, contentDescription = null)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Sync") },
+                                    onClick = {
+                                        showMenu = false
+                                        viewModel.syncPhotos()
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Sync, contentDescription = null)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
