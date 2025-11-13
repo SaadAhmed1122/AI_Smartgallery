@@ -1,7 +1,11 @@
 package com.ai.smartgallery.presentation.settings
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil.ImageLoader
+import coil.annotation.ExperimentalCoilApi
+import com.ai.smartgallery.domain.repository.MediaRepository
 import com.ai.smartgallery.domain.repository.PreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -13,7 +17,10 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val preferencesRepository: PreferencesRepository
+    private val preferencesRepository: PreferencesRepository,
+    private val mediaRepository: MediaRepository,
+    private val imageLoader: ImageLoader,
+    private val application: Application
 ) : ViewModel() {
 
     val themeMode: StateFlow<String> = preferencesRepository
@@ -83,6 +90,32 @@ class SettingsViewModel @Inject constructor(
     fun setAiProcessingEnabled(enabled: Boolean) {
         viewModelScope.launch {
             preferencesRepository.setAiProcessingEnabled(enabled)
+        }
+    }
+
+    @OptIn(ExperimentalCoilApi::class)
+    fun clearCache() {
+        viewModelScope.launch {
+            try {
+                // Clear Coil image cache
+                imageLoader.memoryCache?.clear()
+                imageLoader.diskCache?.clear()
+
+                // Clear app cache directory
+                application.cacheDir.deleteRecursively()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun emptyTrash() {
+        viewModelScope.launch {
+            try {
+                mediaRepository.emptyTrash()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 }

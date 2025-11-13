@@ -1,5 +1,6 @@
 package com.ai.smartgallery.presentation.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -26,6 +27,9 @@ fun SettingsScreen(
     val isAppLockEnabled by viewModel.isAppLockEnabled.collectAsState()
     val isBiometricEnabled by viewModel.isBiometricEnabled.collectAsState()
     val isAiProcessingEnabled by viewModel.isAiProcessingEnabled.collectAsState()
+
+    var showThemeDialog by remember { mutableStateOf(false) }
+    var showGridDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -56,14 +60,14 @@ fun SettingsScreen(
                     "dark" -> "Dark"
                     else -> "System default"
                 },
-                onClick = { /* TODO: Show theme dialog */ }
+                onClick = { showThemeDialog = true }
             )
 
             SettingItem(
                 icon = Icons.Default.GridView,
                 title = "Grid columns",
                 subtitle = "$gridColumnCount columns",
-                onClick = { /* TODO: Show column picker */ }
+                onClick = { showGridDialog = true }
             )
 
             Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -102,6 +106,25 @@ fun SettingsScreen(
 
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
+            // Storage Section
+            SettingSection(title = "Storage")
+
+            SettingItem(
+                icon = Icons.Default.Storage,
+                title = "Clear Cache",
+                subtitle = "Free up space by clearing image cache",
+                onClick = { viewModel.clearCache() }
+            )
+
+            SettingItem(
+                icon = Icons.Default.Delete,
+                title = "Empty Trash",
+                subtitle = "Permanently delete all items in trash",
+                onClick = { viewModel.emptyTrash() }
+            )
+
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+
             // About Section
             SettingSection(title = "About")
 
@@ -119,6 +142,30 @@ fun SettingsScreen(
                 onClick = { /* TODO: Open privacy policy */ }
             )
         }
+    }
+
+    // Theme selection dialog
+    if (showThemeDialog) {
+        ThemeSelectionDialog(
+            currentTheme = themeMode,
+            onThemeSelected = { theme ->
+                viewModel.setThemeMode(theme)
+                showThemeDialog = false
+            },
+            onDismiss = { showThemeDialog = false }
+        )
+    }
+
+    // Grid column selection dialog
+    if (showGridDialog) {
+        GridColumnDialog(
+            currentColumns = gridColumnCount,
+            onColumnsSelected = { columns ->
+                viewModel.setGridColumnCount(columns)
+                showGridDialog = false
+            },
+            onDismiss = { showGridDialog = false }
+        )
     }
 }
 
@@ -212,5 +259,113 @@ private fun SwitchSetting(
             checked = checked,
             onCheckedChange = onCheckedChange
         )
+    }
+}
+
+@Composable
+private fun ThemeSelectionDialog(
+    currentTheme: String,
+    onThemeSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Select Theme") },
+        text = {
+            Column {
+                ThemeOption(
+                    title = "System default",
+                    selected = currentTheme == "system",
+                    onClick = { onThemeSelected("system") }
+                )
+                ThemeOption(
+                    title = "Light",
+                    selected = currentTheme == "light",
+                    onClick = { onThemeSelected("light") }
+                )
+                ThemeOption(
+                    title = "Dark",
+                    selected = currentTheme == "dark",
+                    onClick = { onThemeSelected("dark") }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun ThemeOption(
+    title: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = onClick
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(text = title)
+    }
+}
+
+@Composable
+private fun GridColumnDialog(
+    currentColumns: Int,
+    onColumnsSelected: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Grid Columns") },
+        text = {
+            Column {
+                listOf(2, 3, 4, 5, 6).forEach { columns ->
+                    GridColumnOption(
+                        columns = columns,
+                        selected = currentColumns == columns,
+                        onClick = { onColumnsSelected(columns) }
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun GridColumnOption(
+    columns: Int,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = onClick
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(text = "$columns columns")
     }
 }
