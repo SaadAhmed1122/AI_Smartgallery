@@ -34,7 +34,7 @@ class TextRecognizer @Inject constructor() {
                     boundingBox = block.boundingBox,
                     cornerPoints = block.cornerPoints?.toList() ?: emptyList(),
                     confidence = 0.0f, // ML Kit doesn't provide per-block confidence
-                    recognizedLanguages = block.recognizedLanguages.map { it.languageCode }
+                    recognizedLanguages = emptyList() // Language detection not essential for basic OCR
                 )
             }
 
