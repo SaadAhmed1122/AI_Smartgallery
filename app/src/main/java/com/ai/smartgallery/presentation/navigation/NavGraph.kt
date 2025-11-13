@@ -8,6 +8,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.ai.smartgallery.presentation.gallery.GalleryScreen
+import com.ai.smartgallery.presentation.photo.PhotoDetailScreen
+import com.ai.smartgallery.presentation.album.AlbumsScreen
+import com.ai.smartgallery.presentation.search.SearchScreen
+import com.ai.smartgallery.presentation.settings.SettingsScreen
 
 /**
  * Main navigation graph for the app
@@ -46,26 +50,37 @@ fun NavGraph(
             )
         ) { backStackEntry ->
             val photoId = backStackEntry.arguments?.getLong("photoId") ?: 0L
-            // PhotoDetailScreen will be implemented
-            // PhotoDetailScreen(photoId = photoId, onBack = { navController.popBackStack() })
+            PhotoDetailScreen(
+                photoId = photoId,
+                onBack = { navController.popBackStack() }
+            )
         }
 
         // Albums screen
         composable(Screen.Albums.route) {
-            // AlbumsScreen will be implemented
-            // AlbumsScreen(onAlbumClick = { albumId ->
-            //     navController.navigate(Screen.AlbumDetail.createRoute(albumId))
-            // })
+            AlbumsScreen(
+                onAlbumClick = { albumId ->
+                    navController.navigate(Screen.AlbumDetail.createRoute(albumId))
+                },
+                onBack = { navController.popBackStack() }
+            )
         }
 
         // Search screen
         composable(Screen.Search.route) {
-            // SearchScreen will be implemented
+            SearchScreen(
+                onPhotoClick = { photoId ->
+                    navController.navigate(Screen.PhotoDetail.createRoute(photoId))
+                },
+                onBack = { navController.popBackStack() }
+            )
         }
 
         // Settings screen
         composable(Screen.Settings.route) {
-            // SettingsScreen will be implemented
+            SettingsScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
 
         // Vault screen
