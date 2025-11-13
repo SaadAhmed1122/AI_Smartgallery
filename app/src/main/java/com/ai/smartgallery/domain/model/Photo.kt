@@ -22,5 +22,7 @@ data class Photo(
     val rating: Int = 0,
     val isHidden: Boolean = false,
     val isVideo: Boolean = false,
-    val duration: Long? = null
+    val duration: Long? = null,
+    val isDeleted: Boolean = false,
+    val deletedAt: Long? = null
 )

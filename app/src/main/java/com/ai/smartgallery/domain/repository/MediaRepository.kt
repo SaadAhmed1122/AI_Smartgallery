@@ -73,4 +73,45 @@ interface MediaRepository {
      * Get video count
      */
     suspend fun getVideoCount(): Int
+
+    /**
+     * Get deleted photos (trash)
+     */
+    fun getDeletedPhotos(): Flow<List<Photo>>
+
+    /**
+     * Move photo to trash (soft delete)
+     */
+    suspend fun moveToTrash(photoId: Long)
+
+    /**
+     * Move multiple photos to trash
+     */
+    suspend fun moveToTrashBatch(photoIds: List<Long>)
+
+    /**
+     * Restore photo from trash
+     */
+    suspend fun restoreFromTrash(photoId: Long)
+
+    /**
+     * Restore multiple photos from trash
+     */
+    suspend fun restoreFromTrashBatch(photoIds: List<Long>)
+
+    /**
+     * Permanently delete photos older than specified time
+     * @param olderThanDays Number of days after which to permanently delete
+     */
+    suspend fun permanentlyDeleteOldTrash(olderThanDays: Int = 30)
+
+    /**
+     * Empty trash (permanently delete all trashed photos)
+     */
+    suspend fun emptyTrash()
+
+    /**
+     * Get deleted photo count
+     */
+    suspend fun getDeletedPhotoCount(): Int
 }

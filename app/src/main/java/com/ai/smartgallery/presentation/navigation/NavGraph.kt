@@ -13,6 +13,7 @@ import com.ai.smartgallery.presentation.album.AlbumsScreen
 import com.ai.smartgallery.presentation.search.SearchScreen
 import com.ai.smartgallery.presentation.settings.SettingsScreen
 import com.ai.smartgallery.presentation.editor.PhotoEditorScreen
+import com.ai.smartgallery.presentation.trash.TrashScreen
 
 /**
  * Main navigation graph for the app
@@ -93,6 +94,16 @@ fun NavGraph(
         // People screen
         composable(Screen.People.route) {
             // PeopleScreen will be implemented
+        }
+
+        // Trash screen
+        composable(Screen.Trash.route) {
+            TrashScreen(
+                onBack = { navController.popBackStack() },
+                onPhotoClick = { photoId ->
+                    navController.navigate(Screen.PhotoDetail.createRoute(photoId))
+                }
+            )
         }
 
         // Photo editor screen

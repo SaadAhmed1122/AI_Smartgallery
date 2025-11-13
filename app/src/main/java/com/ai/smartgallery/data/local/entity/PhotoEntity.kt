@@ -78,6 +78,12 @@ data class PhotoEntity(
     @ColumnInfo(name = "duration")
     val duration: Long? = null, // Video duration in milliseconds
 
+    @ColumnInfo(name = "is_deleted")
+    val isDeleted: Boolean = false,
+
+    @ColumnInfo(name = "deleted_at")
+    val deletedAt: Long? = null,
+
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
 

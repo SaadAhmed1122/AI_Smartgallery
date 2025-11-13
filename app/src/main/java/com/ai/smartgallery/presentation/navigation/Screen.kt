@@ -16,6 +16,7 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
     object Vault : Screen("vault")
     object People : Screen("people")
+    object Trash : Screen("trash")
     object PhotoEditor : Screen("photo_editor/{photoId}") {
         fun createRoute(photoId: Long) = "photo_editor/$photoId"
     }

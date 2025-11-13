@@ -28,7 +28,9 @@ fun PhotoEntity.toDomain(): Photo {
         rating = rating,
         isHidden = isHidden,
         isVideo = isVideo,
-        duration = duration
+        duration = duration,
+        isDeleted = isDeleted,
+        deletedAt = deletedAt
     )
 }
 
@@ -55,7 +57,9 @@ fun Photo.toEntity(): PhotoEntity {
         rating = rating,
         isHidden = isHidden,
         isVideo = isVideo,
-        duration = duration
+        duration = duration,
+        isDeleted = isDeleted,
+        deletedAt = deletedAt
     )
 }
 

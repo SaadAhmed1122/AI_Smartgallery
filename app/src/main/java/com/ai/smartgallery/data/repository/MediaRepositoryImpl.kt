@@ -107,4 +107,39 @@ class MediaRepositoryImpl @Inject constructor(
     override suspend fun getVideoCount(): Int = withContext(ioDispatcher) {
         photoDao.getVideoCount()
     }
+
+    override fun getDeletedPhotos(): Flow<List<Photo>> {
+        return photoDao.getDeletedPhotos().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    override suspend fun moveToTrash(photoId: Long) = withContext(ioDispatcher) {
+        photoDao.moveToTrash(photoId, System.currentTimeMillis())
+    }
+
+    override suspend fun moveToTrashBatch(photoIds: List<Long>) = withContext(ioDispatcher) {
+        photoDao.moveToTrashBatch(photoIds, System.currentTimeMillis())
+    }
+
+    override suspend fun restoreFromTrash(photoId: Long) = withContext(ioDispatcher) {
+        photoDao.restoreFromTrash(photoId)
+    }
+
+    override suspend fun restoreFromTrashBatch(photoIds: List<Long>) = withContext(ioDispatcher) {
+        photoDao.restoreFromTrashBatch(photoIds)
+    }
+
+    override suspend fun permanentlyDeleteOldTrash(olderThanDays: Int) = withContext(ioDispatcher) {
+        val olderThan = System.currentTimeMillis() - (olderThanDays * 24 * 60 * 60 * 1000L)
+        photoDao.permanentlyDeleteOldTrash(olderThan)
+    }
+
+    override suspend fun emptyTrash() = withContext(ioDispatcher) {
+        photoDao.emptyTrash()
+    }
+
+    override suspend fun getDeletedPhotoCount(): Int = withContext(ioDispatcher) {
+        photoDao.getDeletedPhotoCount()
+    }
 }
