@@ -3,6 +3,7 @@ package com.ai.smartgallery.presentation.photo
 import android.content.Intent
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -34,13 +35,17 @@ import java.util.*
 fun PhotoDetailScreen(
     photoId: Long,
     onBack: () -> Unit,
+    onEdit: () -> Unit,
     viewModel: PhotoDetailViewModel = hiltViewModel()
 ) {
     val photo by viewModel.photo.collectAsState()
+    val photoTags by viewModel.photoTags.collectAsState()
+    val allTags by viewModel.allTags.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     val showInfo by viewModel.showInfo.collectAsState()
     val showActions by viewModel.showActions.collectAsState()
+    val showTagDialog by viewModel.showTagDialog.collectAsState()
 
     var scale by remember { mutableStateOf(1f) }
     var offsetX by remember { mutableStateOf(0f) }
@@ -152,7 +157,7 @@ fun PhotoDetailScreen(
                     onShare = {
                         sharePhoto(context, currentPhoto)
                     },
-                    onEdit = { /* TODO: Navigate to editor */ },
+                    onEdit = onEdit,
                     onDelete = {
                         viewModel.deletePhoto()
                         onBack()
@@ -166,9 +171,24 @@ fun PhotoDetailScreen(
             photo?.let { currentPhoto ->
                 PhotoInfoBottomSheet(
                     photo = currentPhoto,
-                    onDismiss = { viewModel.toggleInfo() }
+                    tags = photoTags,
+                    onDismiss = { viewModel.toggleInfo() },
+                    onManageTags = { viewModel.showTagDialog() },
+                    onRemoveTag = { tagId -> viewModel.removeTagFromPhoto(tagId) }
                 )
             }
+        }
+
+        // Tag management dialog
+        if (showTagDialog) {
+            TagManagementDialog(
+                photoTags = photoTags,
+                allTags = allTags,
+                onDismiss = { viewModel.hideTagDialog() },
+                onAddTag = { tagId -> viewModel.addTagToPhoto(tagId) },
+                onRemoveTag = { tagId -> viewModel.removeTagFromPhoto(tagId) },
+                onCreateTag = { name -> viewModel.createAndAddTag(name) }
+            )
         }
 
         // Loading indicator
@@ -271,7 +291,10 @@ private fun ActionButton(
 @Composable
 private fun PhotoInfoBottomSheet(
     photo: com.ai.smartgallery.domain.model.Photo,
-    onDismiss: () -> Unit
+    tags: List<com.ai.smartgallery.domain.model.Tag>,
+    onDismiss: () -> Unit,
+    onManageTags: () -> Unit,
+    onRemoveTag: (Long) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
 
@@ -289,6 +312,57 @@ private fun PhotoInfoBottomSheet(
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
+
+            // Tags section
+            if (tags.isNotEmpty() || true) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Tags:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        modifier = Modifier.weight(0.4f)
+                    )
+                    Column(modifier = Modifier.weight(0.6f)) {
+                        androidx.compose.foundation.layout.FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            tags.forEach { tag ->
+                                AssistChip(
+                                    onClick = { },
+                                    label = { Text(tag.name) },
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Remove",
+                                            modifier = Modifier
+                                                .size(16.dp)
+                                                .clickable { onRemoveTag(tag.id) }
+                                        )
+                                    }
+                                )
+                            }
+                            AssistChip(
+                                onClick = onManageTags,
+                                label = { Text("Add tag") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Add",
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+            }
 
             InfoRow("Name", photo.displayName)
             InfoRow("Size", formatFileSize(photo.size))
@@ -330,6 +404,130 @@ private fun InfoRow(label: String, value: String) {
             modifier = Modifier.weight(0.6f)
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TagManagementDialog(
+    photoTags: List<com.ai.smartgallery.domain.model.Tag>,
+    allTags: List<com.ai.smartgallery.domain.model.Tag>,
+    onDismiss: () -> Unit,
+    onAddTag: (Long) -> Unit,
+    onRemoveTag: (Long) -> Unit,
+    onCreateTag: (String) -> Unit
+) {
+    var newTagName by remember { mutableStateOf("") }
+    val photoTagIds = photoTags.map { it.id }.toSet()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Manage Tags") },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 400.dp)
+            ) {
+                // Current tags
+                if (photoTags.isNotEmpty()) {
+                    Text(
+                        text = "Current Tags",
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    androidx.compose.foundation.layout.FlowRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        photoTags.forEach { tag ->
+                            FilterChip(
+                                selected = true,
+                                onClick = { onRemoveTag(tag.id) },
+                                label = { Text(tag.name) },
+                                trailingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Remove",
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Available tags
+                val availableTags = allTags.filter { !photoTagIds.contains(it.id) }
+                if (availableTags.isNotEmpty()) {
+                    Text(
+                        text = "Available Tags",
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    androidx.compose.foundation.layout.FlowRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        availableTags.forEach { tag ->
+                            FilterChip(
+                                selected = false,
+                                onClick = { onAddTag(tag.id) },
+                                label = { Text(tag.name) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Add",
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Create new tag
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                Text(
+                    text = "Create New Tag",
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = newTagName,
+                        onValueChange = { newTagName = it },
+                        label = { Text("Tag name") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(
+                        onClick = {
+                            if (newTagName.isNotBlank()) {
+                                onCreateTag(newTagName)
+                                newTagName = ""
+                            }
+                        },
+                        enabled = newTagName.isNotBlank()
+                    ) {
+                        Icon(Icons.Default.Add, "Create and add tag")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Done")
+            }
+        }
+    )
 }
 
 private fun sharePhoto(context: android.content.Context, photo: com.ai.smartgallery.domain.model.Photo) {
