@@ -16,6 +16,9 @@ interface ImageLabelDao {
     @Query("SELECT * FROM image_labels WHERE label = :label ORDER BY confidence DESC")
     suspend fun getPhotosWithLabel(label: String): List<ImageLabelEntity>
 
+    @Query("SELECT * FROM image_labels WHERE label LIKE :query ORDER BY confidence DESC")
+    suspend fun searchLabels(query: String): List<ImageLabelEntity>
+
     @Query("SELECT DISTINCT label FROM image_labels ORDER BY label ASC")
     fun getAllDistinctLabels(): Flow<List<String>>
 

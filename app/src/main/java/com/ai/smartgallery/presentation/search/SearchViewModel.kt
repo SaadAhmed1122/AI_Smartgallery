@@ -213,12 +213,13 @@ class SearchViewModel @Inject constructor(
             val labels = imageLabelDao.searchLabels("%$query%")
 
             // Get all photo IDs that have matching labels
-            val photoIds = labels.map { it.photoId }.distinct()
+            val photoIds = labels.map { entity -> entity.photoId }.distinct()
 
             // Fetch photos by IDs
-            photoIds.mapNotNull { photoId ->
+            val photos = photoIds.mapNotNull { photoId ->
                 mediaRepository.getPhotoById(photoId)
             }
+            photos
         } catch (e: Exception) {
             emptyList()
         }

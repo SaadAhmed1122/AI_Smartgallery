@@ -20,6 +20,7 @@ import com.ai.smartgallery.data.local.entity.ImageLabelEntity
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import java.io.ByteArrayOutputStream
 import kotlin.math.min
 
@@ -114,7 +115,7 @@ class AIProcessingWorker @AssistedInject constructor(
                             imageLabelDao.getLabelsForPhoto(photo.id).isEmpty()
                         }
                         PROCESS_FACES -> {
-                            faceEmbeddingDao.getFaceEmbeddingsForPhoto(photo.id).isEmpty()
+                            faceEmbeddingDao.getFacesInPhoto(photo.id).isEmpty()
                         }
                         PROCESS_DUPLICATES -> {
                             photo.perceptualHash == null
@@ -164,7 +165,7 @@ class AIProcessingWorker @AssistedInject constructor(
                 PROCESS_ALL -> {
                     // Check which tasks need to be done
                     val hasLabels = imageLabelDao.getLabelsForPhoto(photoId).isNotEmpty()
-                    val hasFaces = faceEmbeddingDao.getFaceEmbeddingsForPhoto(photoId).isNotEmpty()
+                    val hasFaces = faceEmbeddingDao.getFacesInPhoto(photoId).isNotEmpty()
                     val hasHash = photo.perceptualHash != null
 
                     if (!hasFaces) processFaces(photoId, bitmap)
