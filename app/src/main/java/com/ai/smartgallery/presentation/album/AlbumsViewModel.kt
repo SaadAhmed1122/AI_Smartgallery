@@ -61,6 +61,21 @@ class AlbumsViewModel @Inject constructor(
     private val _showCreateDialog = MutableStateFlow(false)
     val showCreateDialog: StateFlow<Boolean> = _showCreateDialog.asStateFlow()
 
+    init {
+        // Ensure photos are synced from MediaStore
+        syncPhotos()
+    }
+
+    private fun syncPhotos() {
+        viewModelScope.launch {
+            try {
+                mediaRepository.syncPhotosFromMediaStore()
+            } catch (e: Exception) {
+                // Sync error - user may see empty albums
+            }
+        }
+    }
+
     fun createAlbum(name: String) {
         if (name.isBlank()) {
             _error.value = "Album name cannot be empty"
