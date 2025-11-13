@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.ai.smartgallery.presentation.gallery.GalleryScreen
 import com.ai.smartgallery.presentation.photo.PhotoDetailScreen
 import com.ai.smartgallery.presentation.album.AlbumsScreen
+import com.ai.smartgallery.presentation.album.detail.AlbumDetailScreen
 import com.ai.smartgallery.presentation.search.SearchScreen
 import com.ai.smartgallery.presentation.settings.SettingsScreen
 import com.ai.smartgallery.presentation.editor.PhotoEditorScreen
@@ -66,6 +67,23 @@ fun NavGraph(
                     navController.navigate(Screen.AlbumDetail.createRoute(albumId))
                 },
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Album detail screen
+        composable(
+            route = Screen.AlbumDetail.route,
+            arguments = listOf(
+                navArgument("albumId") { type = NavType.LongType }
+            )
+        ) { backStackEntry ->
+            val albumId = backStackEntry.arguments?.getLong("albumId") ?: 0L
+            AlbumDetailScreen(
+                albumId = albumId,
+                onBack = { navController.popBackStack() },
+                onPhotoClick = { photoId ->
+                    navController.navigate(Screen.PhotoDetail.createRoute(photoId))
+                }
             )
         }
 
