@@ -183,10 +183,19 @@ class AIProcessingWorker @AssistedInject constructor(
                     val hasFaces = faceEmbeddingDao.getFacesInPhoto(photoId).isNotEmpty()
                     val hasHash = photo.perceptualHash != null
 
+                    android.util.Log.d("AIProcessingWorker", "Photo $photoId status: hasLabels=$hasLabels, hasFaces=$hasFaces, hasHash=$hasHash")
+
                     if (!hasFaces) processFaces(photoId, bitmap)
+                    else android.util.Log.d("AIProcessingWorker", "Photo $photoId: Skipping face detection (already processed)")
+
                     if (!hasLabels) processLabels(photoId, bitmap)
+                    else android.util.Log.d("AIProcessingWorker", "Photo $photoId: Skipping labeling (already processed)")
+
                     if (!hasHash) processDuplicate(photoId, bitmap)
+                    else android.util.Log.d("AIProcessingWorker", "Photo $photoId: Skipping duplicate detection (already processed)")
+
                     if (!hasLabels) processOCR(photoId, bitmap) // OCR stored as labels
+                    else android.util.Log.d("AIProcessingWorker", "Photo $photoId: Skipping OCR (already processed)")
                 }
                 PROCESS_FACES -> processFaces(photoId, bitmap)
                 PROCESS_LABELS -> processLabels(photoId, bitmap)
@@ -242,8 +251,10 @@ class AIProcessingWorker @AssistedInject constructor(
     }
 
     private suspend fun processFaces(photoId: Long, bitmap: android.graphics.Bitmap) {
+        android.util.Log.d("AIProcessingWorker", "Detecting faces in photo $photoId...")
         // Detect faces
         val faces = faceDetector.detectFaces(bitmap)
+        android.util.Log.d("AIProcessingWorker", "Photo $photoId: Found ${faces.size} faces")
 
         // Process each detected face
         faces.forEach { face ->
@@ -270,9 +281,11 @@ class AIProcessingWorker @AssistedInject constructor(
                     faceBitmap.recycle()
                 }
             } catch (e: Exception) {
+                android.util.Log.e("AIProcessingWorker", "Failed to process face in photo $photoId", e)
                 e.printStackTrace()
             }
         }
+        android.util.Log.d("AIProcessingWorker", "Photo $photoId: Inserted ${faces.size} face embeddings")
     }
 
     private suspend fun processLabels(photoId: Long, bitmap: android.graphics.Bitmap) {
@@ -297,21 +310,26 @@ class AIProcessingWorker @AssistedInject constructor(
     }
 
     private suspend fun processDuplicate(photoId: Long, bitmap: android.graphics.Bitmap) {
+        android.util.Log.d("AIProcessingWorker", "Generating perceptual hash for photo $photoId...")
         // Generate perceptual hash
         val hash = perceptualHasher.generateHash(bitmap)
+        android.util.Log.d("AIProcessingWorker", "Photo $photoId: Generated hash: ${hash.take(16)}...")
 
         // Update photo with hash
         val photo = photoDao.getPhotoById(photoId)
         if (photo != null) {
             photoDao.updatePhoto(photo.copy(perceptualHash = hash))
+            android.util.Log.d("AIProcessingWorker", "Photo $photoId: Perceptual hash saved")
         }
     }
 
     private suspend fun processOCR(photoId: Long, bitmap: android.graphics.Bitmap) {
+        android.util.Log.d("AIProcessingWorker", "Checking for text in photo $photoId...")
         // Check if image has significant text
         if (textRecognizer.hasSignificantText(bitmap)) {
             // Extract text
             val text = textRecognizer.extractSearchableText(bitmap)
+            android.util.Log.d("AIProcessingWorker", "Photo $photoId: Found text (${text.length} chars)")
 
             // Store as a special label for searching
             if (text.isNotBlank()) {
@@ -321,7 +339,10 @@ class AIProcessingWorker @AssistedInject constructor(
                     confidence = 1.0f
                 )
                 imageLabelDao.insertLabel(textLabel)
+                android.util.Log.d("AIProcessingWorker", "Photo $photoId: Text label saved")
             }
+        } else {
+            android.util.Log.d("AIProcessingWorker", "Photo $photoId: No significant text found")
         }
     }
 
