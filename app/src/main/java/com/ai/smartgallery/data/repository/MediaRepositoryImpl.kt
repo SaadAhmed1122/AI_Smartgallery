@@ -114,11 +114,8 @@ class MediaRepositoryImpl @Inject constructor(
     override fun scheduleAIProcessing() {
         android.util.Log.d("MediaRepository", "scheduleAIProcessing() called - enqueueing WorkManager job")
         val workRequest = OneTimeWorkRequestBuilder<AIProcessingWorker>()
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiresBatteryNotLow(true)
-                    .build()
-            )
+            // Remove battery constraint for immediate execution during debugging
+            // TODO: Re-enable battery constraint in production
             .build()
 
         workManager.enqueueUniqueWork(
