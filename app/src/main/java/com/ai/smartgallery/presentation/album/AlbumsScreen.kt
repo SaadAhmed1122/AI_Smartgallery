@@ -30,6 +30,9 @@ fun AlbumsScreen(
     onBack: () -> Unit,
     onNavigateToGallery: () -> Unit = {},
     onAIAlbumClick: (String) -> Unit = {},
+    onPeopleClick: () -> Unit = {},
+    onDocumentsClick: () -> Unit = {},
+    onDuplicatesClick: () -> Unit = {},
     viewModel: AlbumsViewModel = hiltViewModel()
 ) {
     val albums by viewModel.albums.collectAsState()
@@ -37,6 +40,9 @@ fun AlbumsScreen(
     val allPhotos by viewModel.allPhotos.collectAsState()
     val videos by viewModel.videos.collectAsState()
     val aiAlbums by viewModel.aiGeneratedAlbums.collectAsState()
+    val peopleCount by viewModel.peopleCount.collectAsState()
+    val documentsCount by viewModel.documentsCount.collectAsState()
+    val duplicatesCount by viewModel.duplicatesCount.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     val showCreateDialog by viewModel.showCreateDialog.collectAsState()
@@ -116,6 +122,45 @@ fun AlbumsScreen(
                         coverPhotos = favoritePhotos.take(4).map { it.path },
                         onClick = onNavigateToGallery
                     )
+                }
+
+                // People (Faces)
+                if (peopleCount > 0) {
+                    item {
+                        SmartAlbumCard(
+                            title = "People",
+                            count = peopleCount,
+                            icon = Icons.Default.Face,
+                            coverPhotos = emptyList(), // Will be loaded from repository
+                            onClick = onPeopleClick
+                        )
+                    }
+                }
+
+                // Documents (Text/OCR)
+                if (documentsCount > 0) {
+                    item {
+                        SmartAlbumCard(
+                            title = "Documents",
+                            count = documentsCount,
+                            icon = Icons.Default.Description,
+                            coverPhotos = emptyList(),
+                            onClick = onDocumentsClick
+                        )
+                    }
+                }
+
+                // Duplicates
+                if (duplicatesCount > 0) {
+                    item {
+                        SmartAlbumCard(
+                            title = "Duplicates",
+                            count = duplicatesCount,
+                            icon = Icons.Default.ContentCopy,
+                            coverPhotos = emptyList(),
+                            onClick = onDuplicatesClick
+                        )
+                    }
                 }
 
                 // AI-Generated Albums Section Header
