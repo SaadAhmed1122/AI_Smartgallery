@@ -16,7 +16,7 @@ import javax.inject.Singleton
 class ImageLabeler @Inject constructor() {
 
     companion object {
-        private const val CONFIDENCE_THRESHOLD = 0.7f
+        private const val CONFIDENCE_THRESHOLD = 0.5f  // Lower threshold to detect more labels
     }
 
     private val options = ImageLabelerOptions.Builder()

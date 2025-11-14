@@ -134,9 +134,11 @@ class AIProcessingWorker @AssistedInject constructor(
                         else -> true
                     }
 
-                    if (shouldProcess || processType == PROCESS_ALL) {
+                    if (shouldProcess) {
                         processPhoto(photo.id, processType)
                         processedCount++
+                    } else {
+                        android.util.Log.d("AIProcessingWorker", "Photo ${photo.id} already processed, skipping")
                     }
 
                     // Update progress

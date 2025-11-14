@@ -107,8 +107,8 @@ class MediaRepositoryImpl @Inject constructor(
         val videos = mediaStoreManager.loadAllVideos()
         photoDao.insertPhotos(videos)
 
-        // Schedule AI processing after photos are synced
-        scheduleAIProcessing()
+        // Don't auto-schedule AI processing - let user trigger it manually
+        // This prevents re-processing every time the screen is navigated to
     }
 
     override fun scheduleAIProcessing() {
