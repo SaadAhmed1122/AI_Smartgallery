@@ -18,10 +18,15 @@ class SmartGalleryApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        android.util.Log.d("SmartGalleryApp", "Application onCreate() - HiltWorkerFactory: ${if (::workerFactory.isInitialized) "initialized" else "not initialized"}")
     }
 
     override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .build()
+        get() {
+            android.util.Log.d("SmartGalleryApp", "Providing WorkManager configuration with HiltWorkerFactory")
+            return Configuration.Builder()
+                .setWorkerFactory(workerFactory)
+                .setMinimumLoggingLevel(android.util.Log.DEBUG)
+                .build()
+        }
 }
