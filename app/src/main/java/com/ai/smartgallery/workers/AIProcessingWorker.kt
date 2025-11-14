@@ -281,17 +281,19 @@ class AIProcessingWorker @AssistedInject constructor(
         val labels = imageLabeler.labelImage(bitmap)
         android.util.Log.d("AIProcessingWorker", "Photo $photoId: Found ${labels.size} labels: ${labels.map { it.text }}")
 
-        // Store labels in database
-        val labelEntities = labels.map { label ->
-            ImageLabelEntity(
+        // Only keep the TOP label (highest confidence) to avoid duplicates across albums
+        if (labels.isNotEmpty()) {
+            val topLabel = labels.first() // Already sorted by confidence in ImageLabeler
+            val labelEntity = ImageLabelEntity(
                 photoId = photoId,
-                label = label.text,
-                confidence = label.confidence
+                label = topLabel.text,
+                confidence = topLabel.confidence
             )
+            imageLabelDao.insertLabel(labelEntity)
+            android.util.Log.d("AIProcessingWorker", "Photo $photoId: Inserted top label '${topLabel.text}' (confidence: ${topLabel.confidence})")
+        } else {
+            android.util.Log.d("AIProcessingWorker", "Photo $photoId: No labels found")
         }
-
-        imageLabelDao.insertLabels(labelEntities)
-        android.util.Log.d("AIProcessingWorker", "Photo $photoId: Inserted ${labelEntities.size} labels into database")
     }
 
     private suspend fun processDuplicate(photoId: Long, bitmap: android.graphics.Bitmap) {
