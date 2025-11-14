@@ -9,6 +9,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.ai.smartgallery.data.local.MediaStoreManager
+import com.ai.smartgallery.data.local.dao.FaceEmbeddingDao
 import com.ai.smartgallery.data.local.dao.ImageLabelDao
 import com.ai.smartgallery.data.local.dao.PhotoDao
 import com.ai.smartgallery.data.model.toDomain
@@ -18,6 +19,7 @@ import com.ai.smartgallery.domain.repository.MediaRepository
 import com.ai.smartgallery.workers.AIProcessingWorker
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -30,6 +32,7 @@ import javax.inject.Singleton
 class MediaRepositoryImpl @Inject constructor(
     private val photoDao: PhotoDao,
     private val imageLabelDao: ImageLabelDao,
+    private val faceEmbeddingDao: FaceEmbeddingDao,
     private val mediaStoreManager: MediaStoreManager,
     private val workManager: WorkManager,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
