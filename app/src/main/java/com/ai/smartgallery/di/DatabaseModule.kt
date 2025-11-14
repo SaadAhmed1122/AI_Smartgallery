@@ -29,7 +29,7 @@ object DatabaseModule {
                 GalleryDatabase.MIGRATION_1_2,
                 GalleryDatabase.MIGRATION_2_3
             )
-            .fallbackToDestructiveMigration() // For development only
+            // Removed fallbackToDestructiveMigration to persist data across app restarts
             .build()
     }
 
