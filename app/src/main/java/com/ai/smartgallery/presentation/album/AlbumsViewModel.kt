@@ -120,7 +120,14 @@ class AlbumsViewModel @Inject constructor(
                 android.util.Log.d("AlbumsViewModel", "Calling mediaRepository.scheduleAIProcessing()")
                 mediaRepository.scheduleAIProcessing()
                 android.util.Log.d("AlbumsViewModel", "AI Processing scheduled successfully")
-                _error.value = "AI Processing started! Check back in a few minutes"
+                _error.value = "AI Processing started! Refreshing in 60 seconds..."
+
+                // Refresh counts after a delay to allow processing to complete
+                // TODO: Use WorkManager observer instead of delay
+                kotlinx.coroutines.delay(60000) // Wait 60 seconds
+                android.util.Log.d("AlbumsViewModel", "Refreshing AI feature counts...")
+                refreshAIFeatureCounts()
+                _error.value = "AI Processing complete! Check your albums."
             } catch (e: Exception) {
                 android.util.Log.e("AlbumsViewModel", "Failed to start AI processing", e)
                 _error.value = "Failed to start AI processing: ${e.message}"
