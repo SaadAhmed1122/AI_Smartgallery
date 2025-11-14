@@ -41,6 +41,17 @@ fun AlbumsScreen(
     val error by viewModel.error.collectAsState()
     val showCreateDialog by viewModel.showCreateDialog.collectAsState()
 
+    // Debug logging
+    LaunchedEffect(aiAlbums) {
+        android.util.Log.d("AlbumsScreen", "AI Albums count: ${aiAlbums.size}")
+        aiAlbums.forEach { (label, count, _) ->
+            android.util.Log.d("AlbumsScreen", "  - $label: $count photos")
+        }
+    }
+    LaunchedEffect(allPhotos) {
+        android.util.Log.d("AlbumsScreen", "Total photos: ${allPhotos.size}")
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -109,12 +120,20 @@ fun AlbumsScreen(
 
                 // AI-Generated Albums Section Header
                 item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
-                    Text(
-                        text = "AI Albums",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(vertical = 8.dp, top = 16.dp)
-                    )
+                    Column {
+                        Text(
+                            text = "AI Albums",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(vertical = 8.dp, top = 16.dp)
+                        )
+                        // Debug info
+                        Text(
+                            text = "Debug: ${aiAlbums.size} AI albums found, ${allPhotos.size} total photos",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
                 if (aiAlbums.isNotEmpty()) {
@@ -570,7 +589,10 @@ private fun AIProcessingCard(
             if (photoCount > 0) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
-                    onClick = onStartProcessing,
+                    onClick = {
+                        android.util.Log.d("AIProcessingCard", "Start AI Processing button clicked!")
+                        onStartProcessing()
+                    },
                     modifier = Modifier.fillMaxWidth(0.7f)
                 ) {
                     Icon(
@@ -586,6 +608,13 @@ private fun AIProcessingCard(
                     text = "Processing runs in background and may take a few minutes",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Check logcat for: AIProcessingWorker, AlbumsScreen, MediaRepository",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.5f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
             }

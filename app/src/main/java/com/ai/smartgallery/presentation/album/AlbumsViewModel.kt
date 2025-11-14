@@ -85,11 +85,16 @@ class AlbumsViewModel @Inject constructor(
     }
 
     fun triggerAIProcessing() {
+        android.util.Log.d("AlbumsViewModel", "triggerAIProcessing() called")
         viewModelScope.launch {
             try {
                 _isLoading.value = true
+                android.util.Log.d("AlbumsViewModel", "Calling mediaRepository.scheduleAIProcessing()")
                 mediaRepository.scheduleAIProcessing()
+                android.util.Log.d("AlbumsViewModel", "AI Processing scheduled successfully")
+                _error.value = "AI Processing started! Check back in a few minutes"
             } catch (e: Exception) {
+                android.util.Log.e("AlbumsViewModel", "Failed to start AI processing", e)
                 _error.value = "Failed to start AI processing: ${e.message}"
             } finally {
                 _isLoading.value = false
