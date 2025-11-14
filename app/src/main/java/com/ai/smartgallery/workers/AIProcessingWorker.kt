@@ -77,26 +77,35 @@ class AIProcessingWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
+        android.util.Log.d("AIProcessingWorker", "=== AI Processing Worker Started ===")
         return try {
             val photoId = inputData.getLong(KEY_PHOTO_ID, -1)
             val processType = inputData.getString(KEY_PROCESS_TYPE) ?: PROCESS_ALL
             val batchSize = inputData.getInt(KEY_BATCH_SIZE, DEFAULT_BATCH_SIZE)
 
+            android.util.Log.d("AIProcessingWorker", "Configuration: photoId=$photoId, processType=$processType, batchSize=$batchSize")
+
             if (photoId == -1L) {
                 // Process all unprocessed photos in batches
+                android.util.Log.d("AIProcessingWorker", "Processing all photos...")
                 processAllPhotos(processType, batchSize)
             } else {
                 // Process specific photo
+                android.util.Log.d("AIProcessingWorker", "Processing single photo: $photoId")
                 processPhoto(photoId, processType)
             }
 
+            android.util.Log.d("AIProcessingWorker", "=== AI Processing Worker Completed Successfully ===")
             Result.success()
         } catch (e: Exception) {
+            android.util.Log.e("AIProcessingWorker", "=== AI Processing Worker Failed ===", e)
             e.printStackTrace()
             // Only retry on recoverable errors
             if (e is OutOfMemoryError) {
+                android.util.Log.e("AIProcessingWorker", "Out of memory error - not retrying")
                 Result.failure() // Don't retry OOM errors
             } else {
+                android.util.Log.w("AIProcessingWorker", "Recoverable error - will retry")
                 Result.retry()
             }
         }
@@ -104,9 +113,11 @@ class AIProcessingWorker @AssistedInject constructor(
 
     private suspend fun processAllPhotos(processType: String, batchSize: Int) {
         val photos = photoDao.getAllPhotosFlow().first()
+        android.util.Log.d("AIProcessingWorker", "Found ${photos.size} total photos to process")
         var processedCount = 0
 
         photos.chunked(batchSize).forEachIndexed { batchIndex, batch ->
+            android.util.Log.d("AIProcessingWorker", "Processing batch $batchIndex (${batch.size} photos)")
             batch.forEachIndexed { index, photo ->
                 try {
                     // Skip if already processed (has labels/embeddings)
@@ -152,6 +163,8 @@ class AIProcessingWorker @AssistedInject constructor(
                 delay(BATCH_DELAY_MS * 2)
             }
         }
+
+        android.util.Log.d("AIProcessingWorker", "Finished processing all photos. Total processed: $processedCount out of ${photos.size}")
     }
 
     private suspend fun processPhoto(photoId: Long, processType: String) {
@@ -262,7 +275,9 @@ class AIProcessingWorker @AssistedInject constructor(
 
     private suspend fun processLabels(photoId: Long, bitmap: android.graphics.Bitmap) {
         // Label image
+        android.util.Log.d("AIProcessingWorker", "Labeling photo $photoId...")
         val labels = imageLabeler.labelImage(bitmap)
+        android.util.Log.d("AIProcessingWorker", "Photo $photoId: Found ${labels.size} labels: ${labels.map { it.text }}")
 
         // Store labels in database
         val labelEntities = labels.map { label ->
@@ -274,6 +289,7 @@ class AIProcessingWorker @AssistedInject constructor(
         }
 
         imageLabelDao.insertLabels(labelEntities)
+        android.util.Log.d("AIProcessingWorker", "Photo $photoId: Inserted ${labelEntities.size} labels into database")
     }
 
     private suspend fun processDuplicate(photoId: Long, bitmap: android.graphics.Bitmap) {

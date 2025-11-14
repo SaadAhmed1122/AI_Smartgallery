@@ -112,6 +112,7 @@ class MediaRepositoryImpl @Inject constructor(
     }
 
     override fun scheduleAIProcessing() {
+        android.util.Log.d("MediaRepository", "scheduleAIProcessing() called - enqueueing WorkManager job")
         val workRequest = OneTimeWorkRequestBuilder<AIProcessingWorker>()
             .setConstraints(
                 Constraints.Builder()
@@ -125,6 +126,7 @@ class MediaRepositoryImpl @Inject constructor(
             ExistingWorkPolicy.REPLACE,
             workRequest
         )
+        android.util.Log.d("MediaRepository", "AI Processing work enqueued successfully with ID: ${workRequest.id}")
     }
 
     override suspend fun getPhotoCount(): Int = withContext(ioDispatcher) {
@@ -173,7 +175,13 @@ class MediaRepositoryImpl @Inject constructor(
     override fun getAIGeneratedAlbums(): Flow<List<Triple<String, Int, List<String>>>> {
         return imageLabelDao.getAllDistinctLabels().map { labels ->
             withContext(ioDispatcher) {
-                labels.mapNotNull { label ->
+                android.util.Log.d("MediaRepository", "getAIGeneratedAlbums: Found ${labels.size} distinct labels")
+                labels.forEach { label ->
+                    val count = imageLabelDao.getPhotoCountForLabel(label)
+                    android.util.Log.d("MediaRepository", "  Label '$label': $count photos")
+                }
+
+                val albums = labels.mapNotNull { label ->
                     val count = imageLabelDao.getPhotoCountForLabel(label)
                     // Only include labels with at least 3 photos
                     if (count >= 3) {
@@ -187,6 +195,9 @@ class MediaRepositoryImpl @Inject constructor(
                     } else null
                 }.sortedByDescending { it.second } // Sort by photo count descending
                 .take(20) // Limit to top 20 AI albums
+
+                android.util.Log.d("MediaRepository", "getAIGeneratedAlbums: Returning ${albums.size} AI albums")
+                albums
             }
         }
     }
