@@ -130,4 +130,30 @@ interface MediaRepository {
      * Get photos for a specific AI label
      */
     suspend fun getPhotosForLabel(label: String): List<Photo>
+
+    /**
+     * Get count of photos with detected faces
+     */
+    suspend fun getPhotosWithFacesCount(): Int
+
+    /**
+     * Get all photos with detected faces
+     */
+    suspend fun getPhotosWithFaces(): List<Photo>
+
+    /**
+     * Get count of photos with detected text (documents)
+     */
+    suspend fun getPhotosWithTextCount(): Int
+
+    /**
+     * Get all photos with detected text
+     */
+    suspend fun getPhotosWithText(): List<Photo>
+
+    /**
+     * Get duplicate photo groups
+     * Returns list of (representative photo, duplicate photo IDs, similarity)
+     */
+    suspend fun getDuplicateGroups(): List<Triple<Photo, List<Photo>, Float>>
 }

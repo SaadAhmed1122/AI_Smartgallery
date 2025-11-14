@@ -206,4 +206,91 @@ class MediaRepositoryImpl @Inject constructor(
             photoDao.getPhotoById(photoId)?.toDomain()
         }
     }
+
+    override suspend fun getPhotosWithFacesCount(): Int = withContext(ioDispatcher) {
+        faceEmbeddingDao.getPhotosWithFaces().size
+    }
+
+    override suspend fun getPhotosWithFaces(): List<Photo> = withContext(ioDispatcher) {
+        val photoIds = faceEmbeddingDao.getPhotosWithFaces()
+        photoIds.mapNotNull { photoId ->
+            photoDao.getPhotoById(photoId)?.toDomain()
+        }
+    }
+
+    override suspend fun getPhotosWithTextCount(): Int = withContext(ioDispatcher) {
+        // Text is stored as labels with "text:" prefix in OCR processing
+        imageLabelDao.getPhotosWithLabel("text:").size
+    }
+
+    override suspend fun getPhotosWithText(): List<Photo> = withContext(ioDispatcher) {
+        // Get all labels starting with "text:"
+        val allLabels = imageLabelDao.getAllDistinctLabels().first()
+        val textLabels = allLabels.filter { it.startsWith("text:") }
+
+        val photoIds = textLabels.flatMap { label ->
+            imageLabelDao.getPhotosWithLabel(label).map { it.photoId }
+        }.distinct()
+
+        photoIds.mapNotNull { photoId ->
+            photoDao.getPhotoById(photoId)?.toDomain()
+        }
+    }
+
+    override suspend fun getDuplicateGroups(): List<Triple<Photo, List<Photo>, Float>> = withContext(ioDispatcher) {
+        val allPhotos = photoDao.getAllPhotosFlow().first()
+        val groups = mutableListOf<Triple<Photo, List<Photo>, Float>>()
+        val processed = mutableSetOf<Long>()
+
+        allPhotos.forEach { photo ->
+            if (photo.id !in processed && photo.perceptualHash != null) {
+                val duplicates = allPhotos.filter { other ->
+                    other.id != photo.id &&
+                    other.perceptualHash != null &&
+                    other.id !in processed &&
+                    // Calculate similarity using PerceptualHasher
+                    calculateHashSimilarity(photo.perceptualHash!!, other.perceptualHash!!) >= 0.90f
+                }
+
+                if (duplicates.isNotEmpty()) {
+                    processed.add(photo.id)
+                    processed.addAll(duplicates.map { it.id })
+
+                    groups.add(
+                        Triple(
+                            photo.toDomain(),
+                            duplicates.map { it.toDomain() },
+                            0.90f
+                        )
+                    )
+                }
+            }
+        }
+
+        groups
+    }
+
+    private fun calculateHashSimilarity(hash1: String, hash2: String): Float {
+        if (hash1.isEmpty() || hash2.isEmpty() || hash1.length != hash2.length) {
+            return 0f
+        }
+
+        var hammingDistance = 0
+        for (i in hash1.indices) {
+            val xor = hexCharToInt(hash1[i]) xor hexCharToInt(hash2[i])
+            hammingDistance += Integer.bitCount(xor)
+        }
+
+        val maxDistance = hash1.length * 4
+        return 1f - (hammingDistance.toFloat() / maxDistance)
+    }
+
+    private fun hexCharToInt(c: Char): Int {
+        return when (c) {
+            in '0'..'9' -> c - '0'
+            in 'a'..'f' -> c - 'a' + 10
+            in 'A'..'F' -> c - 'A' + 10
+            else -> 0
+        }
+    }
 }

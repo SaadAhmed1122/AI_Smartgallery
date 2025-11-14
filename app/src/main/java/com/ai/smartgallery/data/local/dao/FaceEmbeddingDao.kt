@@ -39,4 +39,7 @@ interface FaceEmbeddingDao {
 
     @Query("SELECT COUNT(*) FROM face_embeddings WHERE person_id IS NULL")
     suspend fun getUnassignedFaceCount(): Int
+
+    @Query("SELECT DISTINCT photo_id FROM face_embeddings")
+    suspend fun getPhotosWithFaces(): List<Long>
 }

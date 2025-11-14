@@ -60,6 +60,15 @@ class AlbumsViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
+    private val _peopleCount = MutableStateFlow(0)
+    val peopleCount: StateFlow<Int> = _peopleCount.asStateFlow()
+
+    private val _documentsCount = MutableStateFlow(0)
+    val documentsCount: StateFlow<Int> = _documentsCount.asStateFlow()
+
+    private val _duplicatesCount = MutableStateFlow(0)
+    val duplicatesCount: StateFlow<Int> = _duplicatesCount.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -72,6 +81,8 @@ class AlbumsViewModel @Inject constructor(
     init {
         // Ensure photos are synced from MediaStore
         syncPhotos()
+        // Load AI feature counts
+        loadAIFeatureCounts()
     }
 
     private fun syncPhotos() {
@@ -82,6 +93,23 @@ class AlbumsViewModel @Inject constructor(
                 // Sync error - user may see empty albums
             }
         }
+    }
+
+    private fun loadAIFeatureCounts() {
+        viewModelScope.launch {
+            try {
+                _peopleCount.value = mediaRepository.getPhotosWithFacesCount()
+                _documentsCount.value = mediaRepository.getPhotosWithTextCount()
+                val duplicateGroups = mediaRepository.getDuplicateGroups()
+                _duplicatesCount.value = duplicateGroups.sumOf { it.second.size + 1 }
+            } catch (e: Exception) {
+                android.util.Log.e("AlbumsViewModel", "Failed to load AI feature counts", e)
+            }
+        }
+    }
+
+    fun refreshAIFeatureCounts() {
+        loadAIFeatureCounts()
     }
 
     fun triggerAIProcessing() {
