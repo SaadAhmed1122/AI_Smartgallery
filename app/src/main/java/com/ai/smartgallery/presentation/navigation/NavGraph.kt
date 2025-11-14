@@ -16,6 +16,9 @@ import com.ai.smartgallery.presentation.search.SearchScreen
 import com.ai.smartgallery.presentation.settings.SettingsScreen
 import com.ai.smartgallery.presentation.editor.PhotoEditorScreen
 import com.ai.smartgallery.presentation.trash.TrashScreen
+import com.ai.smartgallery.presentation.people.PeopleScreen
+import com.ai.smartgallery.presentation.documents.DocumentsScreen
+import com.ai.smartgallery.presentation.duplicates.DuplicatesScreen
 
 /**
  * Main navigation graph for the app
@@ -75,6 +78,15 @@ fun NavGraph(
                 },
                 onAIAlbumClick = { label ->
                     navController.navigate(Screen.AIAlbumDetail.createRoute(label))
+                },
+                onPeopleClick = {
+                    navController.navigate(Screen.People.route)
+                },
+                onDocumentsClick = {
+                    navController.navigate(Screen.Documents.route)
+                },
+                onDuplicatesClick = {
+                    navController.navigate(Screen.Duplicates.route)
                 }
             )
         }
@@ -138,7 +150,32 @@ fun NavGraph(
 
         // People screen
         composable(Screen.People.route) {
-            // PeopleScreen will be implemented
+            PeopleScreen(
+                onBack = { navController.popBackStack() },
+                onPhotoClick = { photoId ->
+                    navController.navigate(Screen.PhotoDetail.createRoute(photoId))
+                }
+            )
+        }
+
+        // Documents screen
+        composable(Screen.Documents.route) {
+            DocumentsScreen(
+                onBack = { navController.popBackStack() },
+                onPhotoClick = { photoId ->
+                    navController.navigate(Screen.PhotoDetail.createRoute(photoId))
+                }
+            )
+        }
+
+        // Duplicates screen
+        composable(Screen.Duplicates.route) {
+            DuplicatesScreen(
+                onBack = { navController.popBackStack() },
+                onPhotoClick = { photoId ->
+                    navController.navigate(Screen.PhotoDetail.createRoute(photoId))
+                }
+            )
         }
 
         // Trash screen

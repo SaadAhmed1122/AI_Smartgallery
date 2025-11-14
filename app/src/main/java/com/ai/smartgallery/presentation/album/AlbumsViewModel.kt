@@ -1,11 +1,15 @@
 package com.ai.smartgallery.presentation.album
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.ai.smartgallery.domain.model.Album
 import com.ai.smartgallery.domain.model.Photo
 import com.ai.smartgallery.domain.repository.AlbumRepository
 import com.ai.smartgallery.domain.repository.MediaRepository
+import com.ai.smartgallery.workers.AIProcessingWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -17,7 +21,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AlbumsViewModel @Inject constructor(
     private val albumRepository: AlbumRepository,
-    private val mediaRepository: MediaRepository
+    private val mediaRepository: MediaRepository,
+    private val workManager: WorkManager
 ) : ViewModel() {
 
     val albums: StateFlow<List<Album>> = albumRepository
@@ -75,6 +80,9 @@ class AlbumsViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private val _processingProgress = MutableStateFlow<String?>(null)
+    val processingProgress: StateFlow<String?> = _processingProgress.asStateFlow()
+
     private val _showCreateDialog = MutableStateFlow(false)
     val showCreateDialog: StateFlow<Boolean> = _showCreateDialog.asStateFlow()
 
@@ -117,23 +125,76 @@ class AlbumsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
+                _processingProgress.value = "Starting AI processing..."
+
                 android.util.Log.d("AlbumsViewModel", "Calling mediaRepository.scheduleAIProcessing()")
                 mediaRepository.scheduleAIProcessing()
                 android.util.Log.d("AlbumsViewModel", "AI Processing scheduled successfully")
-                _error.value = "AI Processing started! Refreshing in 60 seconds..."
 
-                // Refresh counts after a delay to allow processing to complete
-                // TODO: Use WorkManager observer instead of delay
-                kotlinx.coroutines.delay(60000) // Wait 60 seconds
-                android.util.Log.d("AlbumsViewModel", "Refreshing AI feature counts...")
-                refreshAIFeatureCounts()
-                _error.value = "AI Processing complete! Check your albums."
+                // Observe WorkManager progress
+                observeWorkProgress()
             } catch (e: Exception) {
                 android.util.Log.e("AlbumsViewModel", "Failed to start AI processing", e)
                 _error.value = "Failed to start AI processing: ${e.message}"
-            } finally {
                 _isLoading.value = false
+                _processingProgress.value = null
             }
+        }
+    }
+
+    private fun observeWorkProgress() {
+        viewModelScope.launch {
+            workManager.getWorkInfosForUniqueWorkLiveData(AIProcessingWorker.WORK_NAME)
+                .asFlow()
+                .collect { workInfoList ->
+                    val workInfo = workInfoList.firstOrNull()
+
+                    when (workInfo?.state) {
+                        WorkInfo.State.RUNNING -> {
+                            // Extract progress data
+                            val progress = workInfo.progress.getInt("progress", 0)
+                            val total = workInfo.progress.getInt("total", 0)
+                            val batch = workInfo.progress.getInt("batch", 0)
+
+                            if (total > 0) {
+                                val percentage = (progress * 100) / total
+                                _processingProgress.value = "Processing photos: $progress/$total ($percentage%)"
+                                android.util.Log.d("AlbumsViewModel", "Progress: $progress/$total")
+                            } else {
+                                _processingProgress.value = "AI Processing in progress..."
+                            }
+                        }
+                        WorkInfo.State.SUCCEEDED -> {
+                            android.util.Log.d("AlbumsViewModel", "AI Processing completed successfully")
+                            _processingProgress.value = "Processing complete! Refreshing..."
+
+                            // Refresh counts
+                            refreshAIFeatureCounts()
+
+                            // Show success message briefly
+                            kotlinx.coroutines.delay(2000)
+                            _processingProgress.value = null
+                            _isLoading.value = false
+                            _error.value = "AI Processing complete! Check your albums."
+                        }
+                        WorkInfo.State.FAILED -> {
+                            android.util.Log.e("AlbumsViewModel", "AI Processing failed")
+                            _processingProgress.value = null
+                            _isLoading.value = false
+                            _error.value = "AI Processing failed. Please try again."
+                        }
+                        WorkInfo.State.CANCELLED -> {
+                            android.util.Log.w("AlbumsViewModel", "AI Processing cancelled")
+                            _processingProgress.value = null
+                            _isLoading.value = false
+                            _error.value = "AI Processing cancelled."
+                        }
+                        else -> {
+                            // ENQUEUED or BLOCKED state
+                            _processingProgress.value = "Waiting to start processing..."
+                        }
+                    }
+                }
         }
     }
 
