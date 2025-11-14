@@ -29,6 +29,7 @@ fun AlbumsScreen(
     onAlbumClick: (Long) -> Unit,
     onBack: () -> Unit,
     onNavigateToGallery: () -> Unit = {},
+    onAIAlbumClick: (String) -> Unit = {},
     viewModel: AlbumsViewModel = hiltViewModel()
 ) {
     val albums by viewModel.albums.collectAsState()
@@ -118,11 +119,12 @@ fun AlbumsScreen(
                     }
 
                     // AI-generated album cards
-                    items(aiAlbums) { (label, count) ->
+                    items(aiAlbums) { (label, count, coverPhotos) ->
                         AIAlbumCard(
                             label = label,
                             count = count,
-                            onClick = { /* TODO: Navigate to AI album */ }
+                            coverPhotos = coverPhotos,
+                            onClick = { onAIAlbumClick(label) }
                         )
                     }
                 }
@@ -364,6 +366,7 @@ private fun AlbumCard(
 private fun AIAlbumCard(
     label: String,
     count: Int,
+    coverPhotos: List<String>,
     onClick: () -> Unit
 ) {
     Card(
@@ -374,50 +377,131 @@ private fun AIAlbumCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Gradient background
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                // Icon representing the AI album type
-                Icon(
-                    imageVector = when {
-                        label.contains("dog", ignoreCase = true) -> Icons.Default.Pets
-                        label.contains("food", ignoreCase = true) -> Icons.Default.Restaurant
-                        label.contains("car", ignoreCase = true) -> Icons.Default.DirectionsCar
-                        label.contains("person", ignoreCase = true) ||
-                        label.contains("people", ignoreCase = true) -> Icons.Default.Person
-                        label.contains("nature", ignoreCase = true) ||
-                        label.contains("tree", ignoreCase = true) ||
-                        label.contains("flower", ignoreCase = true) -> Icons.Default.LocalFlorist
-                        label.contains("building", ignoreCase = true) ||
-                        label.contains("architecture", ignoreCase = true) -> Icons.Default.LocationCity
-                        label.contains("sunset", ignoreCase = true) ||
-                        label.contains("sky", ignoreCase = true) -> Icons.Default.WbSunny
-                        else -> Icons.Default.Label
-                    },
-                    contentDescription = label,
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                )
+            if (coverPhotos.isNotEmpty()) {
+                // Display up to 4 images in a 2x2 grid
+                Row(modifier = Modifier.fillMaxSize()) {
+                    // Left column
+                    Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                        // Top-left image
+                        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                            AsyncImage(
+                                model = coverPhotos.getOrNull(0),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        // Bottom-left image
+                        if (coverPhotos.size > 2) {
+                            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                                AsyncImage(
+                                    model = coverPhotos.getOrNull(2),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
+                    }
+                    // Right column
+                    if (coverPhotos.size > 1) {
+                        Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                            // Top-right image
+                            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                                AsyncImage(
+                                    model = coverPhotos.getOrNull(1),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                            // Bottom-right image
+                            if (coverPhotos.size > 3) {
+                                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                                    AsyncImage(
+                                        model = coverPhotos.getOrNull(3),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Fallback to icon if no cover photos
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = when {
+                            label.contains("dog", ignoreCase = true) ||
+                            label.contains("cat", ignoreCase = true) ||
+                            label.contains("pet", ignoreCase = true) -> Icons.Default.Pets
+                            label.contains("food", ignoreCase = true) -> Icons.Default.Restaurant
+                            label.contains("car", ignoreCase = true) ||
+                            label.contains("vehicle", ignoreCase = true) -> Icons.Default.DirectionsCar
+                            label.contains("person", ignoreCase = true) ||
+                            label.contains("people", ignoreCase = true) ||
+                            label.contains("face", ignoreCase = true) -> Icons.Default.Person
+                            label.contains("nature", ignoreCase = true) ||
+                            label.contains("tree", ignoreCase = true) ||
+                            label.contains("flower", ignoreCase = true) ||
+                            label.contains("plant", ignoreCase = true) -> Icons.Default.LocalFlorist
+                            label.contains("building", ignoreCase = true) ||
+                            label.contains("architecture", ignoreCase = true) ||
+                            label.contains("city", ignoreCase = true) -> Icons.Default.LocationCity
+                            label.contains("sunset", ignoreCase = true) ||
+                            label.contains("sky", ignoreCase = true) ||
+                            label.contains("cloud", ignoreCase = true) -> Icons.Default.WbSunny
+                            label.contains("water", ignoreCase = true) ||
+                            label.contains("ocean", ignoreCase = true) ||
+                            label.contains("sea", ignoreCase = true) ||
+                            label.contains("beach", ignoreCase = true) -> Icons.Default.WaterDrop
+                            else -> Icons.Default.Label
+                        },
+                        contentDescription = label,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                    )
+                }
             }
 
-            // Album info overlay
+            // Album info overlay with semi-transparent background
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp),
                 contentAlignment = Alignment.BottomStart
             ) {
-                Column {
-                    Text(
-                        text = label.replaceFirstChar { it.uppercase() },
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = label.replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                     Text(
                         text = "$count photos",
                         style = MaterialTheme.typography.bodySmall,

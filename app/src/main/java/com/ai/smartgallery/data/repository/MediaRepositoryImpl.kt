@@ -170,14 +170,20 @@ class MediaRepositoryImpl @Inject constructor(
         photoDao.getDeletedPhotoCount()
     }
 
-    override fun getAIGeneratedAlbums(): Flow<List<Pair<String, Int>>> {
+    override fun getAIGeneratedAlbums(): Flow<List<Triple<String, Int, List<String>>>> {
         return imageLabelDao.getAllDistinctLabels().map { labels ->
             withContext(ioDispatcher) {
                 labels.mapNotNull { label ->
                     val count = imageLabelDao.getPhotoCountForLabel(label)
                     // Only include labels with at least 3 photos
                     if (count >= 3) {
-                        label to count
+                        // Get cover photos for this label
+                        val labelEntities = imageLabelDao.getPhotosWithLabel(label)
+                        val photoIds = labelEntities.map { it.photoId }.distinct().take(4)
+                        val coverPhotoPaths = photoIds.mapNotNull { photoId ->
+                            photoDao.getPhotoById(photoId)?.path
+                        }
+                        Triple(label, count, coverPhotoPaths)
                     } else null
                 }.sortedByDescending { it.second } // Sort by photo count descending
                 .take(20) // Limit to top 20 AI albums

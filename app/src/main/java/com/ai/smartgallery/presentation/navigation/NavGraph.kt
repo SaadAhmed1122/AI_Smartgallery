@@ -11,6 +11,7 @@ import com.ai.smartgallery.presentation.gallery.GalleryScreen
 import com.ai.smartgallery.presentation.photo.PhotoDetailScreen
 import com.ai.smartgallery.presentation.album.AlbumsScreen
 import com.ai.smartgallery.presentation.album.detail.AlbumDetailScreen
+import com.ai.smartgallery.presentation.album.ai.AIAlbumDetailScreen
 import com.ai.smartgallery.presentation.search.SearchScreen
 import com.ai.smartgallery.presentation.settings.SettingsScreen
 import com.ai.smartgallery.presentation.editor.PhotoEditorScreen
@@ -71,6 +72,9 @@ fun NavGraph(
                     navController.navigate(Screen.Gallery.route) {
                         popUpTo(Screen.Gallery.route) { inclusive = true }
                     }
+                },
+                onAIAlbumClick = { label ->
+                    navController.navigate(Screen.AIAlbumDetail.createRoute(label))
                 }
             )
         }
@@ -85,6 +89,24 @@ fun NavGraph(
             val albumId = backStackEntry.arguments?.getLong("albumId") ?: 0L
             AlbumDetailScreen(
                 albumId = albumId,
+                onBack = { navController.popBackStack() },
+                onPhotoClick = { photoId ->
+                    navController.navigate(Screen.PhotoDetail.createRoute(photoId))
+                }
+            )
+        }
+
+        // AI Album detail screen
+        composable(
+            route = Screen.AIAlbumDetail.route,
+            arguments = listOf(
+                navArgument("label") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val label = backStackEntry.arguments?.getString("label") ?: ""
+            val decodedLabel = java.net.URLDecoder.decode(label, "UTF-8")
+            AIAlbumDetailScreen(
+                label = decodedLabel,
                 onBack = { navController.popBackStack() },
                 onPhotoClick = { photoId ->
                     navController.navigate(Screen.PhotoDetail.createRoute(photoId))

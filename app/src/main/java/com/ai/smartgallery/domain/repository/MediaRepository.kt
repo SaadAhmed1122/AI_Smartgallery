@@ -122,9 +122,9 @@ interface MediaRepository {
 
     /**
      * Get AI-generated albums based on image labels
-     * Returns list of label names with photo counts (minimum 3 photos per label)
+     * Returns list of (label, count, coverPhotoPaths) with minimum 3 photos per label
      */
-    fun getAIGeneratedAlbums(): Flow<List<Pair<String, Int>>>
+    fun getAIGeneratedAlbums(): Flow<List<Triple<String, Int, List<String>>>>
 
     /**
      * Get photos for a specific AI label

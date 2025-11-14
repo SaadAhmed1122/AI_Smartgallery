@@ -12,6 +12,9 @@ sealed class Screen(val route: String) {
     object AlbumDetail : Screen("album_detail/{albumId}") {
         fun createRoute(albumId: Long) = "album_detail/$albumId"
     }
+    object AIAlbumDetail : Screen("ai_album_detail/{label}") {
+        fun createRoute(label: String) = "ai_album_detail/${java.net.URLEncoder.encode(label, "UTF-8")}"
+    }
     object Search : Screen("search")
     object Settings : Screen("settings")
     object Vault : Screen("vault")

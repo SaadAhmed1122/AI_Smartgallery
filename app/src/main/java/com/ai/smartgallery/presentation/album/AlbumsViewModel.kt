@@ -52,7 +52,7 @@ class AlbumsViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    val aiGeneratedAlbums: StateFlow<List<Pair<String, Int>>> = mediaRepository
+    val aiGeneratedAlbums: StateFlow<List<Triple<String, Int, List<String>>>> = mediaRepository
         .getAIGeneratedAlbums()
         .stateIn(
             scope = viewModelScope,
