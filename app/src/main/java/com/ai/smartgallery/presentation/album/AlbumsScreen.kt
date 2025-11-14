@@ -108,16 +108,16 @@ fun AlbumsScreen(
                 }
 
                 // AI-Generated Albums Section Header
-                if (aiAlbums.isNotEmpty()) {
-                    item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
-                        Text(
-                            text = "AI Albums",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(vertical = 8.dp, top = 16.dp)
-                        )
-                    }
+                item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
+                    Text(
+                        text = "AI Albums",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(vertical = 8.dp, top = 16.dp)
+                    )
+                }
 
+                if (aiAlbums.isNotEmpty()) {
                     // AI-generated album cards
                     items(aiAlbums) { (label, count, coverPhotos) ->
                         AIAlbumCard(
@@ -125,6 +125,14 @@ fun AlbumsScreen(
                             count = count,
                             coverPhotos = coverPhotos,
                             onClick = { onAIAlbumClick(label) }
+                        )
+                    }
+                } else {
+                    // AI Processing Status Card
+                    item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
+                        AIProcessingCard(
+                            photoCount = allPhotos.size,
+                            onStartProcessing = { viewModel.triggerAIProcessing() }
                         )
                     }
                 }
@@ -508,6 +516,78 @@ private fun AIAlbumCard(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AIProcessingCard(
+    photoCount: Int,
+    onStartProcessing: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Default.AutoAwesome,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = if (photoCount > 0) {
+                    "AI Albums Not Ready"
+                } else {
+                    "No Photos Yet"
+                },
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = if (photoCount > 0) {
+                    "Tap below to start AI processing. Your $photoCount ${if (photoCount == 1) "photo" else "photos"} will be analyzed to create smart albums based on content (pets, food, nature, etc.)"
+                } else {
+                    "Add some photos first, then AI will automatically categorize them for you"
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+            if (photoCount > 0) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = onStartProcessing,
+                    modifier = Modifier.fillMaxWidth(0.7f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Psychology,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Start AI Processing")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Processing runs in background and may take a few minutes",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
             }
         }
     }

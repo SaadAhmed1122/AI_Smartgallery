@@ -84,6 +84,19 @@ class AlbumsViewModel @Inject constructor(
         }
     }
 
+    fun triggerAIProcessing() {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                mediaRepository.scheduleAIProcessing()
+            } catch (e: Exception) {
+                _error.value = "Failed to start AI processing: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
     fun createAlbum(name: String) {
         if (name.isBlank()) {
             _error.value = "Album name cannot be empty"
